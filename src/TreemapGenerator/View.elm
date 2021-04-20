@@ -3,7 +3,6 @@ module TreemapGenerator.View exposing (view)
 {-| View / render treemap generator with controls.
 -}
 
-
 import Color exposing (Color)
 import Element as E
 import Element.Font as Font
@@ -14,8 +13,8 @@ import List.Nonempty as NE
 import Scale exposing (BandScale, ContinuousScale, defaultBandConfig)
 import Scale.Color as CScale
 import String.Format
-import TreemapGenerator.Types exposing (..)
 import TreemapGenerator.SquarifiedTreemap as ST
+import TreemapGenerator.Types exposing (..)
 import TypedSvg exposing (g, rect, style, svg, text_)
 import TypedSvg.Attributes
     exposing
@@ -38,34 +37,35 @@ import TypedSvg.Core exposing (Svg, text)
 import TypedSvg.Types exposing (Paint(..), Transform(..))
 
 
+
 --------------------------------------------------------------------------------
 -- View
 
 
 view : Model -> Html Msg
 view model =
-
     E.layout
-         [ Font.family [ Font.typeface "Consolas", Font.sansSerif ]
-         , Font.size 24
-         , E.padding 10
-         ]
-         ( E.column
-               [ E.centerX
-               , E.alignTop
-               , E.height <| E.px <| round model.env.windowH
-               , E.width <| E.px <| round model.env.windowW
-               , E.spacing 0
-               ]
-               [ controls model
-               ,  E.el [ E.alignTop
-                       , E.centerX
-                       , E.width <| E.px <| round model.env.w
-                     , E.height <| E.px <| round model.env.h
-                     ]
-                     (render model |> E.html)
-               ]
-         )
+        [ Font.family [ Font.typeface "Consolas", Font.sansSerif ]
+        , Font.size 24
+        , E.padding 10
+        ]
+        (E.column
+            [ E.centerX
+            , E.alignTop
+            , E.height <| E.px <| round model.env.windowH
+            , E.width <| E.px <| round model.env.windowW
+            , E.spacing 0
+            ]
+            [ controls model
+            , E.el
+                [ E.alignTop
+                , E.centerX
+                , E.width <| E.px <| round model.env.w
+                , E.height <| E.px <| round model.env.h
+                ]
+                (render model |> E.html)
+            ]
+        )
 
 
 controls : Model -> E.Element Msg
@@ -78,40 +78,43 @@ controls model =
         [ sortOrderChoice UpdateGroupSortOrder "Group " model.env.groupSortOrder
         , sortOrderChoice UpdateCellSortOrder "Cell " model.env.groupSortOrder
         , colorScaleChoice model.env.colorScale
-        ] 
+        ]
+
 
 sortOrderChoice : (SortOrder -> Msg) -> String -> SortOrder -> E.Element Msg
 sortOrderChoice cmd title selected =
     Input.radioRow
-    [ E.padding 10
-    , E.spacing 10
-    ]
-    { onChange = cmd
-    , selected = Just selected
-    , label = Input.labelAbove [] (E.text <| title ++ "Sort Order")
-    , options =
-        [ Input.option Ascending (E.text "Ascending")
-        , Input.option Descending (E.text "Descending")
-        , Input.option Random (E.text "Random")
+        [ E.padding 10
+        , E.spacing 10
         ]
-    }
+        { onChange = cmd
+        , selected = Just selected
+        , label = Input.labelAbove [] (E.text <| title ++ "Sort Order")
+        , options =
+            [ Input.option Ascending (E.text "Ascending")
+            , Input.option Descending (E.text "Descending")
+            , Input.option Random (E.text "Random")
+            ]
+        }
 
-colorScaleChoice: ColorScale -> E.Element Msg
+
+colorScaleChoice : ColorScale -> E.Element Msg
 colorScaleChoice selected =
     Input.radioRow
-    [ E.padding 10
-    , E.spacing 10
-    ]
-    { onChange = UpdateColorScale
-    , selected = Just selected
-    , label = Input.labelAbove [] (E.text "Color Scale")
-    , options =
-        [ Input.option RedGreen (E.text "Red Green")
-        , Input.option BlackWhite (E.text "Black White")
-        , Input.option TenColors (E.text "Ten Colors")
-        , Input.option TenMoreColors (E.text "Ten More Colors")
+        [ E.padding 10
+        , E.spacing 10
         ]
-    }
+        { onChange = UpdateColorScale
+        , selected = Just selected
+        , label = Input.labelAbove [] (E.text "Color Scale")
+        , options =
+            [ Input.option RedGreen (E.text "Red Green")
+            , Input.option BlackWhite (E.text "Black White")
+            , Input.option TenColors (E.text "Ten Colors")
+            , Input.option TenMoreColors (E.text "Ten More Colors")
+            ]
+        }
+
 
 
 --------------------------------------------------------------------------------
@@ -121,14 +124,14 @@ colorScaleChoice selected =
 render : Model -> Svg msg
 render model =
     let
-        (env, data) =
-            (model.env, model.data)
+        ( env, data ) =
+            ( model.env, model.data )
 
         groups =
             genGroups model
 
         groupCells =
-            ST.makeTreemap { x = env.w, y = env.h }  groups
+            ST.makeTreemap { x = env.w, y = env.h } groups
 
         subtrees =
             NE.map2 (genSubtree model.env) groups groupCells
@@ -165,8 +168,8 @@ renderGroupCell cell =
 genGroups : Model -> NE.Nonempty Group
 genGroups model =
     let
-        (env, data) =
-            (model.env, model.data)
+        ( env, data ) =
+            ( model.env, model.data )
 
         area =
             env.w * env.h
@@ -180,7 +183,7 @@ genGroups model =
         scalar =
             area / totalWeight
     in
-        sortByArea env.groupSortOrder groups
+    sortByArea env.groupSortOrder groups
         |> NE.map (\s -> { s | area = s.area * scalar })
 
 
@@ -189,7 +192,6 @@ genGroup pairs =
     { area = sumWeights pairs
     , series = pairs
     }
-
 
 
 sumWeights : NE.Nonempty Pair -> Float
@@ -222,7 +224,7 @@ genSubtree env group groupCell =
 
 
 genTreeCell : Float -> Pair -> TreeCell
-genTreeCell areaScalar (weight, value) =
+genTreeCell areaScalar ( weight, value ) =
     { weight = weight
     , value = value
     , area = weight * areaScalar
@@ -251,18 +253,24 @@ renderTreeCell env t cell =
         ]
         []
 
+
+
 --------------------------------------------------------------------------------
 -- Scales
+
 
 getColor : ColorScale -> Float -> Color
 getColor cScale val =
     case cScale of
         RedGreen ->
             getRedGreen val
+
         BlackWhite ->
             getBlackWhite val
+
         TenColors ->
             getTenColors CScale.category10 val
+
         TenMoreColors ->
             getTenColors CScale.tableau10 val
 
@@ -285,23 +293,27 @@ getBlackWhite f =
         x =
             if f >= 0 then
                 min 0.5 (f / 2)
+
             else
                 max -0.5 (f / 2)
 
-        (epsilonR, epsilonG, epsilonB) =
+        ( epsilonR, epsilonG, epsilonB ) =
             if f_ >= 0.66 then
-                (min 0.10 ((f_ - 0.66) / 0.11), 0, 0)
+                ( min 0.1 ((f_ - 0.66) / 0.11), 0, 0 )
+
             else if f_ > 0.33 then
-                 (0, (f - 0.33) / 0.11, 0)
+                ( 0, (f - 0.33) / 0.11, 0 )
+
             else
-                (0, 0, (f - 0.33) / 0.11)
+                ( 0, 0, (f - 0.33) / 0.11 )
+
         alpha =
             max 0.2 (abs f)
 
         c =
             0.5 + x
-    in 
-        Color.rgba (c + epsilonR) (c + epsilonG)  (c + epsilonB) alpha
+    in
+    Color.rgba (c + epsilonR) (c + epsilonG) (c + epsilonB) alpha
 
 
 getTenColors : List Color -> Float -> Color
@@ -320,30 +332,36 @@ getTenColors colors f =
 
         alpha =
             0.75 + f_ * 0.25
-
     in
-        Color.rgba c.red c.green c.blue alpha
+    Color.rgba c.red c.green c.blue alpha
+
+
 
 ------------
 -- Helpers
 
+
 type alias HasArea a =
-    { a | area : Float } 
+    { a | area : Float }
+
 
 sortByArea : SortOrder -> NE.Nonempty (HasArea a) -> NE.Nonempty (HasArea a)
 sortByArea sortOrder xs =
-    let sort dir =
+    let
+        sort dir =
             NE.sortBy (.area >> (*) dir) xs
-    in 
+    in
     case sortOrder of
         Ascending ->
             sort 1
 
         Descending ->
-            sort (-1)
+            sort -1
 
         Random ->
             xs
+
+
 
 --------------------------------------------------------------------------------
 -- Style

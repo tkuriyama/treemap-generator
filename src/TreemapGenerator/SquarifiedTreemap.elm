@@ -4,8 +4,8 @@ module TreemapGenerator.SquarifiedTreemap exposing (..)
 <https://www.win.tue.nl/~vanwijk/stm.pdf>
 -}
 
-import TreemapGenerator.Utils as Utils
 import List.Nonempty as NE
+import TreemapGenerator.Utils as Utils
 
 
 

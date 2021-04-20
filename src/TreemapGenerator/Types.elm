@@ -3,19 +3,20 @@ module TreemapGenerator.Types exposing (..)
 {-| Types for TreemapGenerator files.
 -}
 
-
 import List.Nonempty as NE
 import TreemapGenerator.SquarifiedTreemap as ST
 
 
+
 --------------------------------------------------------------------------------
+
 
 type alias Flags =
     { windowWidth : Float
     , windowHeight : Float
-    } 
+    }
 
-    
+
 type alias Model =
     { env : Env
     , data : Data
@@ -68,6 +69,7 @@ type Msg
     | UpdateColorScale ColorScale
     | UpdateGroupSortOrder SortOrder
     | UpdateCellSortOrder SortOrder
+
 
 
 --------------------------------------------------------------------------------
