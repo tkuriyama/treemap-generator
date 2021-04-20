@@ -5,6 +5,8 @@ module TreemapGenerator.View exposing (view)
 
 import Color exposing (Color)
 import Element as E
+import Element.Background as Background
+import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
@@ -20,6 +22,7 @@ import TypedSvg.Attributes
     exposing
         ( class
         , fill
+        , stroke
         , transform
         , viewBox
         )
@@ -70,14 +73,35 @@ view model =
 
 controls : Model -> E.Element Msg
 controls model =
-    E.row
+    let rowAttrs =
+            [ E.alignTop
+            , E.centerX
+            , E.spacing 20
+            , E.padding 5
+            ]
+    in
+    E.column
         [ E.alignTop
         , E.centerX
-        , E.spacing 25
+        , E.spacing 10
         ]
-        [ sortOrderChoice UpdateGroupSortOrder "Group " model.env.groupSortOrder
-        , sortOrderChoice UpdateCellSortOrder "Cell " model.env.groupSortOrder
-        , colorScaleChoice model.env.colorScale
+        [ E.row
+              rowAttrs 
+              [ sortOrderChoice UpdateGroupSortOrder "Group " model.env.groupSortOrder
+              , sortOrderChoice UpdateCellSortOrder "Cell " model.env.groupSortOrder
+              , colorScaleChoice model.env.colorScale
+              ]
+        , E.row
+            rowAttrs
+            [ borderSlider
+                  UpdateGroupBorderWidth
+                  "Group Border Width"
+                  model.env.groupBorderWidth
+            , borderSlider
+                UpdateCellBorderWidth
+                "Cell Border Width"
+                model.env.cellBorderWidth
+            ]
         ]
 
 
@@ -89,7 +113,7 @@ sortOrderChoice cmd title selected =
         ]
         { onChange = cmd
         , selected = Just selected
-        , label = Input.labelAbove [] (E.text <| title ++ "Sort Order")
+        , label = titleLabel <| title ++ "Sort Order"
         , options =
             [ Input.option Ascending (E.text "Ascending")
             , Input.option Descending (E.text "Descending")
@@ -106,7 +130,7 @@ colorScaleChoice selected =
         ]
         { onChange = UpdateColorScale
         , selected = Just selected
-        , label = Input.labelAbove [] (E.text "Color Scale")
+        , label = titleLabel "Color Scale"
         , options =
             [ Input.option RedGreen (E.text "Red Green")
             , Input.option BlackWhite (E.text "Black White")
@@ -114,6 +138,38 @@ colorScaleChoice selected =
             , Input.option TenMoreColors (E.text "Ten More Colors")
             ]
         }
+
+borderSlider : (Float -> Msg) -> String -> Float -> E.Element Msg
+borderSlider msg title currentVal = 
+    Input.slider
+    [ E.height <| E.px 30
+    , E.behindContent
+        (E.el
+            [ E.width E.fill
+            , E.height <| E.px 10
+            , E.centerY
+            , Background.color <| E.rgb255 66 135 245-- 0.5 0.5 0.5
+            , Border.rounded 2
+            ]
+            E.none
+        )
+    ]
+    { onChange = msg
+    , label = titleLabel title
+    , min = 0
+    , max = 4
+    , step = Just 0.25
+    , value = currentVal
+    , thumb =
+        Input.defaultThumb
+    }
+
+
+titleLabel : String -> Input.Label msg
+titleLabel s =
+    Input.labelAbove
+        [ Font.heavy ]
+        (E.text s)
 
 
 
@@ -137,15 +193,14 @@ render model =
             NE.map2 (genSubtree model.env) groups groupCells
     in
     svg [ viewBox 0 0 env.w env.h ]
-        [ style [] [ text <| genStyle env ]
-        , g
+        [ g
             [ class [ "tree_cell" ]
             ]
             (NE.map (renderSubtree env) subtrees |> NE.toList)
         , g
             [ class [ "tree_group" ]
             ]
-            (NE.map renderGroupCell groupCells |> NE.toList)
+            (NE.map (renderGroupCell env) groupCells |> NE.toList)
         ]
 
 
@@ -154,13 +209,16 @@ render model =
 -- Groups
 
 
-renderGroupCell : ST.Cell -> Svg msg
-renderGroupCell cell =
+renderGroupCell : Env -> ST.Cell -> Svg msg
+renderGroupCell env cell =
     rect
         [ x cell.x
         , y cell.y
         , width cell.w
         , height cell.h
+        , stroke <| Paint <| Color.rgb255 160 160 160
+        , strokeWidth env.groupBorderWidth
+        , fill <| PaintNone
         ]
         []
 
@@ -249,6 +307,8 @@ renderTreeCell env t cell =
         , width cell.w
         , height cell.h
         , rx 1
+        , stroke <| Paint <| Color.rgb255 120 120 120
+        , strokeWidth env.cellBorderWidth
         , fill <| Paint <| getColor env.colorScale (t.value * 10)
         ]
         []
@@ -361,17 +421,3 @@ sortByArea sortOrder xs =
         Random ->
             xs
 
-
-
---------------------------------------------------------------------------------
--- Style
-
-
-genStyle : Env -> String
-genStyle env =
-    """
-     .tree_group rect { display: inline; fill: none;
-                        stroke: rgb(120, 120, 120); stroke-width: 1.5px; }
-     .tree_cell rect { display: inline;
-                       stroke: rgb(160, 160, 160); stroke-width: 0.5px; 
-     """

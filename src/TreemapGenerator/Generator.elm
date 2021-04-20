@@ -100,5 +100,11 @@ update msg model =
         UpdateColorScale c ->
             ( { model | env = { env | colorScale = c } }, Cmd.none )
 
+        UpdateGroupBorderWidth w ->
+            ( { model | env = { env | groupBorderWidth = w } }, Cmd.none )
+
+        UpdateCellBorderWidth w ->
+            ( { model | env = { env | cellBorderWidth = w } }, Cmd.none )
+
         _ ->
             ( model, Cmd.none )

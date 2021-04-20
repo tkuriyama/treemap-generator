@@ -28,14 +28,14 @@ type alias Env =
     , windowH : Float
     , w : Float
     , h : Float
+    , groupCt : Int
+    , nodeCt : Int
     , noise : Float
     , groupBorderWidth : Float
     , cellBorderWidth : Float
     , colorScale : ColorScale
     , groupSortOrder : SortOrder
     , cellSortOrder : SortOrder
-    , groupCt : Int
-    , nodeCt : Int
     }
 
 
@@ -65,7 +65,8 @@ type Msg
     | UpdateHeight Float
     | UpdateGroupCt Int
     | UpdateNodeCt Int
-    | UpdateBorderWidth Float
+    | UpdateGroupBorderWidth Float
+    | UpdateCellBorderWidth Float
     | UpdateColorScale ColorScale
     | UpdateGroupSortOrder SortOrder
     | UpdateCellSortOrder SortOrder
