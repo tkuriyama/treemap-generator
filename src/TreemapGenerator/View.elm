@@ -9,6 +9,7 @@ import Element as E
 import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
+import List.Extra as LE
 import List.Nonempty as NE
 import Scale exposing (BandScale, ContinuousScale, defaultBandConfig)
 import Scale.Color as CScale
@@ -46,7 +47,8 @@ view model =
 
     E.layout
          [ Font.family [ Font.typeface "Consolas", Font.sansSerif ]
-         , E.padding 20
+         , Font.size 24
+         , E.padding 10
          ]
          ( E.column
                [ E.centerX
@@ -71,18 +73,22 @@ controls model =
     E.row
         [ E.alignTop
         , E.centerX
+        , E.spacing 25
         ]
-        [ sortOrderChoice model.env.sortOrder ]
+        [ sortOrderChoice UpdateGroupSortOrder "Group " model.env.groupSortOrder
+        , sortOrderChoice UpdateCellSortOrder "Cell " model.env.groupSortOrder
+        , colorScaleChoice model.env.colorScale
+        ] 
 
-sortOrderChoice : SortOrder -> E.Element Msg
-sortOrderChoice selected =
+sortOrderChoice : (SortOrder -> Msg) -> String -> SortOrder -> E.Element Msg
+sortOrderChoice cmd title selected =
     Input.radioRow
     [ E.padding 10
     , E.spacing 10
     ]
-    { onChange = UpdateSortOrder
+    { onChange = cmd
     , selected = Just selected
-    , label = Input.labelAbove [] (E.text "Sort Order")
+    , label = Input.labelAbove [] (E.text <| title ++ "Sort Order")
     , options =
         [ Input.option Ascending (E.text "Ascending")
         , Input.option Descending (E.text "Descending")
@@ -90,6 +96,26 @@ sortOrderChoice selected =
         ]
     }
 
+colorScaleChoice: ColorScale -> E.Element Msg
+colorScaleChoice selected =
+    Input.radioRow
+    [ E.padding 10
+    , E.spacing 10
+    ]
+    { onChange = UpdateColorScale
+    , selected = Just selected
+    , label = Input.labelAbove [] (E.text "Color Scale")
+    , options =
+        [ Input.option RedGreen (E.text "Red Green")
+        , Input.option BlackWhite (E.text "Black White")
+        , Input.option TenColors (E.text "Ten Colors")
+        , Input.option TenMoreColors (E.text "Ten More Colors")
+        ]
+    }
+
+
+--------------------------------------------------------------------------------
+-- Render
 
 
 render : Model -> Svg msg
@@ -154,7 +180,7 @@ genGroups model =
         scalar =
             area / totalWeight
     in
-        sortByArea env.sortOrder groups
+        sortByArea env.groupSortOrder groups
         |> NE.map (\s -> { s | area = s.area * scalar })
 
 
@@ -189,7 +215,7 @@ genSubtree env group groupCell =
             NE.map (genTreeCell areaScalar) group.series
 
         treemap =
-            sortByArea env.sortOrder treeCells
+            sortByArea env.cellSortOrder treeCells
                 |> ST.makeTreemap dims
     in
     ( groupCell, treeCells, treemap )
@@ -231,8 +257,14 @@ renderTreeCell env t cell =
 getColor : ColorScale -> Float -> Color
 getColor cScale val =
     case cScale of
-        _ ->
+        RedGreen ->
             getRedGreen val
+        BlackWhite ->
+            getBlackWhite val
+        TenColors ->
+            getTenColors CScale.category10 val
+        TenMoreColors ->
+            getTenColors CScale.tableau10 val
 
 
 getRedGreen : Float -> Color
@@ -243,6 +275,54 @@ getRedGreen f =
     else
         CScale.plasmaInterpolator (1 - abs f)
 
+
+getBlackWhite : Float -> Color
+getBlackWhite f =
+    let
+        f_ =
+            abs f
+
+        x =
+            if f >= 0 then
+                min 0.5 (f / 2)
+            else
+                max -0.5 (f / 2)
+
+        (epsilonR, epsilonG, epsilonB) =
+            if f_ >= 0.66 then
+                (min 0.10 ((f_ - 0.66) / 0.11), 0, 0)
+            else if f_ > 0.33 then
+                 (0, (f - 0.33) / 0.11, 0)
+            else
+                (0, 0, (f - 0.33) / 0.11)
+        alpha =
+            max 0.2 (abs f)
+
+        c =
+            0.5 + x
+    in 
+        Color.rgba (c + epsilonR) (c + epsilonG)  (c + epsilonB) alpha
+
+
+getTenColors : List Color -> Float -> Color
+getTenColors colors f =
+    let
+        f_ =
+            min 1.0 (abs f)
+
+        index =
+            min 9 (round <| f_ * 10)
+
+        c =
+            LE.getAt index colors
+                |> Maybe.withDefault (Color.rgb 0 0 0)
+                |> Color.toRgba
+
+        alpha =
+            0.75 + f_ * 0.25
+
+    in
+        Color.rgba c.red c.green c.blue alpha
 
 ------------
 -- Helpers

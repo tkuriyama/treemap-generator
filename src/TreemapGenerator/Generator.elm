@@ -42,9 +42,12 @@ init flags =
             , h = flags.windowHeight * 0.9
             , groupCt = NE.length data
             , nodeCt = NE.map (NE.length) data |> NE.foldl1 (+)
-            , borderWidth = 0.25
+            , noise = 0.0
+            , groupBorderWidth = 0.25
+            , cellBorderWidth = 0.25
             , colorScale = RedGreen
-            , sortOrder = Descending
+            , groupSortOrder = Descending
+            , cellSortOrder = Descending
             }
     in
         ( { env = env, data = data }, Cmd.none)
@@ -75,13 +78,15 @@ parseData data =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-    case msg of
-        UpdateSortOrder x ->
-            let env =
-                    model.env
-                env_ =
-                    { env | sortOrder = x }
-            in 
-            ({ model | env = env_ }, Cmd.none)
-        _ ->
-            (model, Cmd.none)
+      let env =
+              model.env
+      in 
+      case msg of
+          UpdateGroupSortOrder x ->
+            ({ model | env = { env | groupSortOrder = x } }, Cmd.none)
+          UpdateCellSortOrder x ->
+              ({ model | env = { env | groupSortOrder = x } }, Cmd.none)
+          UpdateColorScale c ->
+              ({ model | env = { env | colorScale = c } }, Cmd.none)
+          _ ->
+              (model, Cmd.none)
