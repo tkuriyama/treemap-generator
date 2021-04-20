@@ -48,53 +48,52 @@ view model =
          , E.padding 20
          ]
          ( E.column
-               [ E.alignTop
-               , E.height model.windowHeight
-               , E.width model.windowWidth
-               , E.spacing 5
+               [ E.centerX
+               , E.alignTop
+               , E.height <| E.px <| round model.env.windowH
+               , E.width <| E.px <| round model.env.windowW
+               , E.spacing 10
                ]
                [ controls model
-               ,  render model |> E.html
+               ,  E.el [ E.centerX
+                       , E.width <| E.px <| round model.env.w
+                     , E.height <| E.px <| round model.env.h
+                     ]
+                     (render model |> E.html)
                ]
          )
 
 
 controls : Model -> E.Element msg
 controls model =
-    E.el [] []
+    E.el [] E.none
 
-
---------------------------------------------------------------------------------
 
 render : Model -> Svg msg
 render model =
     let
-        dims =
-            { x = env.w - env.pad.left - env.pad.right
-            , y = env.h - env.pad.top - env.pad.bottom
-            }
+        (env, data) =
+            (model.env, model.data)
 
         groups =
-            genGroups (dims.x * dims.y) data
+            genGroups model
 
         groupCells =
-            ST.makeTreemap dims groups
+            ST.makeTreemap { x = env.w, y = env.h }  groups
 
         subtrees =
             NE.map2 genSubtree groups groupCells
     in
     svg [ viewBox 0 0 env.w env.h ]
-        [ style [] [ text <| env.style ]
+        [ style [] [ text <| genStyle env ]
         , g
             [ class [ "tree_cell" ]
-            , transform [ Translate env.pad.left env.pad.top ]
             ]
             (NE.map (renderSubtree env) subtrees |> NE.toList)
         , g
             [ class [ "tree_group" ]
-            , transform [ Translate env.pad.left env.pad.top ]
             ]
-            (NE.map (renderGroupCell env) groupCells |> NE.toList)
+            (NE.map renderGroupCell groupCells |> NE.toList)
         ]
 
 
@@ -103,8 +102,8 @@ render model =
 -- Groups
 
 
-renderGroupCell : ChartEnv -> ST.Cell -> Svg msg
-renderGroupCell env cell =
+renderGroupCell : ST.Cell -> Svg msg
+renderGroupCell cell =
     rect
         [ x cell.x
         , y cell.y
@@ -114,9 +113,15 @@ renderGroupCell env cell =
         []
 
 
-genGroups : Float -> NE.Nonempty (Cfg.GridSeries Cfg.GridTriple) -> NE.Nonempty Group
-genGroups area data =
+genGroups : Model -> NE.Nonempty Group
+genGroups model =
     let
+        (env, data) =
+            (model.env, model.data)
+
+        area =
+            env.w * env.h
+
         groups =
             NE.map genGroup data
 
@@ -130,47 +135,17 @@ genGroups area data =
         |> NE.map (\s -> { s | area = s.area * scalar })
 
 
-genGroup : Cfg.GridSeries Cfg.GridTriple -> Group
-genGroup ( groupName, pairs ) =
-    let
-        treeSeries =
-            genTreeSeries pairs
-
-        area =
-            sumWeights treeSeries
-    in
-    { name = groupName
-    , area = area
-    , series = treeSeries
+genGroup : NE.Nonempty Pair -> Group
+genGroup pairs =
+    { area = sumWeights pairs
+    , series = pairs
     }
 
 
-genTreeSeries : List ( String, List Cfg.GridTriple ) -> NE.Nonempty TreeTriple
-genTreeSeries pairs =
-    let
-        default =
-            ( "", 0, 0 )
 
-        f ( name, triples ) =
-            case triples of
-                x :: y :: [] ->
-                    ( name, x, y )
-
-                _ ->
-                    ( name, default, default )
-    in
-    case pairs of
-        [] ->
-            NE.fromElement ( "", default, default )
-
-        x :: xs ->
-            NE.Nonempty (f x) (List.map f xs)
-                |> NE.sortBy (\( _, _, ( _, w, _ ) ) -> w * -1)
-
-
-sumWeights : NE.Nonempty TreeTriple -> Float
+sumWeights : NE.Nonempty Pair -> Float
 sumWeights =
-    NE.map (\( _, _, ( _, w, _ ) ) -> w) >> NE.foldl1 (+)
+    NE.map Tuple.first >> NE.foldl1 (+)
 
 
 
@@ -188,7 +163,7 @@ genSubtree group groupCell =
             group.area / sumWeights group.series
 
         treeCells =
-            NE.map (genTreeCell group.name areaScalar) group.series
+            NE.map (genTreeCell areaScalar) group.series
 
         treemap =
             ST.makeTreemap dims treeCells
@@ -196,23 +171,15 @@ genSubtree group groupCell =
     ( groupCell, treeCells, treemap )
 
 
-genTreeCell : String -> Float -> TreeTriple -> TreeCell
-genTreeCell groupName areaScalar triple =
-    let
-        ( cellName, ( pLbl, pWeight, pVal ), ( cLbl, cWeight, cVal ) ) =
-            triple
-    in
-    { groupName = groupName
-    , cellName = cellName
-    , previousLabel = pLbl
-    , previousValue = pVal
-    , currentLabel = cLbl
-    , currentValue = cVal
-    , area = cWeight * areaScalar
+genTreeCell : Float -> Pair -> TreeCell
+genTreeCell areaScalar (weight, value) =
+    { weight = weight
+    , value = value
+    , area = weight * areaScalar
     }
 
 
-renderSubtree : ChartEnv -> Subtree -> Svg msg
+renderSubtree : Env -> Subtree -> Svg msg
 renderSubtree env ( groupCell, treeCells, treemap ) =
     g
         [ transform [ Translate groupCell.x groupCell.y ]
@@ -222,50 +189,27 @@ renderSubtree env ( groupCell, treeCells, treemap ) =
         )
 
 
-renderTreeCell : ChartEnv -> TreeCell -> ST.Cell -> Svg msg
+renderTreeCell : Env -> TreeCell -> ST.Cell -> Svg msg
 renderTreeCell env t cell =
-    let
-        length =
-            String.length t.cellName * env.minFontSize |> toFloat |> (*) 0.7
-
-        fontSz =
-            min
-                (toFloat env.baseFontSize)
-                (cell.w / 0.7 / (String.length t.cellName |> toFloat))
-
-        fits =
-            length * 1.2 < cell.w && fontSz * 1.2 < cell.h
-
-        colorVal =
-            (t.currentValue - t.previousValue) / t.previousValue
-    in
-    g []
-        ([ rect
-            [ x cell.x
-            , y cell.y
-            , width cell.w
-            , height cell.h
-            , rx 1
-            , fill <| Paint <| GridChart.getColor (colorVal * 10)
-            ]
-            []
-         ]
-            ++ (if fits then
-                    [ text_
-                        [ x <| cell.x + toFloat env.innerPad
-                        , y <| cell.y + toFloat env.innerPad + fontSz
-                        , fontSize fontSz
-                        ]
-                        [ text t.cellName ]
-                    ]
-
-                else
-                    []
-               )
-        )
+    rect
+        [ x cell.x
+        , y cell.y
+        , width cell.w
+        , height cell.h
+        , rx 1
+        , fill <| Paint <| getColor env.colorScale (t.value * 10)
+        ]
+        []
 
 --------------------------------------------------------------------------------
 -- Scales
+
+getColor : ColorScale -> Float -> Color
+getColor cScale val =
+    case cScale of
+        _ ->
+            getRedGreen val
+
 
 getRedGreen : Float -> Color
 getRedGreen f =
@@ -280,28 +224,11 @@ getRedGreen f =
 -- Style
 
 
-genStyle : Cfg.GridChartCfg -> Int -> String
-genStyle cfg sz =
-    let
-        ( fCfg, tCfg ) =
-            ( cfg.fontSpec, cfg.tooltips )
-    in
+genStyle : Env -> String
+genStyle env =
     """
-     text { font-family: {{typeface}}, monospace, sans-serif;
-            fill: {{textColor}}; }
      .tree_group rect { display: inline; fill: none;
                         stroke: rgb(120, 120, 120); stroke-width: 1.5px; }
      .tree_cell rect { display: inline;
-                       stroke: rgb(160, 160, 160); stroke-width: 0.5px; }
-     .tree_cell text { opacity: 0.85; }
-     .transparent { opacity : 0.0; }
-     .tree_tooltip_hover { display: none; font-size: {{szH}}px;}
-     .tree_tooltip_hover rect { fill: rgba(250, 250, 250, 1.0); }
-     .tree_tooltip_area:hover .tree_tooltip_hover { display: inline; }
+                       stroke: rgb(160, 160, 160); stroke-width: 0.5px; 
      """
-        |> String.Format.namedValue "sz" (String.fromInt sz)
-        |> String.Format.namedValue "textColor" fCfg.textColor
-        |> String.Format.namedValue "szH" (String.fromInt tCfg.hoverTooltipSize)
-        |> String.Format.namedValue "typeface" fCfg.typeface
-        |> String.Format.namedValue "showHover"
-            (UI.display tCfg.showHoverTooltips)

@@ -15,10 +15,10 @@ import TreemapGenerator.View as View
 -- Main
 
 
-main : Flags -> Program flags Model Msg
-main flags =
+main : Program Flags Model Msg
+main =
     Browser.element
-        { init = init flags
+        { init = init
         , view = View.view
         , update = update
         , subscriptions = \_ -> Sub.none
@@ -35,12 +35,11 @@ init flags =
         data =
             parseData SampleData.data
 
-        model = 
+        env = 
             { windowW = flags.windowWidth
             , windowH = flags.windowHeight
-            , x = 1800
-            , y = 1200
-            , data = data
+            , w = flags.windowWidth * 0.8
+            , h = flags.windowHeight * 0.8
             , groupCt = NE.length data
             , nodeCt = NE.map (NE.length) data |> NE.foldl1 (+)
             , borderWidth = 0.25
@@ -48,7 +47,7 @@ init flags =
             , sortOrder = Descending
             }
     in
-        (model, Cmd.none)
+        ( { env = env, data = data }, Cmd.none)
 
 parseData : List ( List (Float, Float ) ) -> Data
 parseData data =
@@ -74,6 +73,6 @@ parseData data =
 --------------------------------------------------------------------------------
 -- Update
 
-update : Msg -> Model -> (Model, Msg)
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-    (model, msg)
+    (model, Cmd.none)

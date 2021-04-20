@@ -15,17 +15,23 @@ type alias Flags =
     , windowHeight : Float
     } 
 
+    
 type alias Model =
+    { env : Env
+    , data : Data
+    }
+
+
+type alias Env =
     { windowW : Float
     , windowH : Float
-    , x : Float
-    , y : Float
-    , data : Data
-    , groupCt : Int
-    , nodeCt : Int
+    , w : Float
+    , h : Float
     , borderWidth : Float
     , colorScale : ColorScale
     , sortOrder : SortOrder
+    , groupCt : Int
+    , nodeCt : Int
     }
 
 
