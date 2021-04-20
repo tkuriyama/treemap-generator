@@ -7,6 +7,7 @@ module TreemapGenerator.View exposing (view)
 import Color exposing (Color)
 import Element as E
 import Element.Font as Font
+import Element.Input as Input
 import Html exposing (Html)
 import List.Nonempty as NE
 import Scale exposing (BandScale, ContinuousScale, defaultBandConfig)
@@ -40,7 +41,7 @@ import TypedSvg.Types exposing (Paint(..), Transform(..))
 -- View
 
 
-view : Model -> Html msg
+view : Model -> Html Msg
 view model =
 
     E.layout
@@ -52,10 +53,11 @@ view model =
                , E.alignTop
                , E.height <| E.px <| round model.env.windowH
                , E.width <| E.px <| round model.env.windowW
-               , E.spacing 10
+               , E.spacing 0
                ]
                [ controls model
-               ,  E.el [ E.centerX
+               ,  E.el [ E.alignTop
+                       , E.centerX
                        , E.width <| E.px <| round model.env.w
                      , E.height <| E.px <| round model.env.h
                      ]
@@ -64,9 +66,30 @@ view model =
          )
 
 
-controls : Model -> E.Element msg
+controls : Model -> E.Element Msg
 controls model =
-    E.el [] E.none
+    E.row
+        [ E.alignTop
+        , E.centerX
+        ]
+        [ sortOrderChoice model.env.sortOrder ]
+
+sortOrderChoice : SortOrder -> E.Element Msg
+sortOrderChoice selected =
+    Input.radioRow
+    [ E.padding 10
+    , E.spacing 10
+    ]
+    { onChange = UpdateSortOrder
+    , selected = Just selected
+    , label = Input.labelAbove [] (E.text "Sort Order")
+    , options =
+        [ Input.option Ascending (E.text "Ascending")
+        , Input.option Descending (E.text "Descending")
+        , Input.option Random (E.text "Random")
+        ]
+    }
+
 
 
 render : Model -> Svg msg
@@ -82,7 +105,7 @@ render model =
             ST.makeTreemap { x = env.w, y = env.h }  groups
 
         subtrees =
-            NE.map2 genSubtree groups groupCells
+            NE.map2 (genSubtree model.env) groups groupCells
     in
     svg [ viewBox 0 0 env.w env.h ]
         [ style [] [ text <| genStyle env ]
@@ -131,7 +154,7 @@ genGroups model =
         scalar =
             area / totalWeight
     in
-    NE.sortBy (.area >> (*) -1) groups
+        sortByArea env.sortOrder groups
         |> NE.map (\s -> { s | area = s.area * scalar })
 
 
@@ -153,8 +176,8 @@ sumWeights =
 -- Subtrees
 
 
-genSubtree : Group -> ST.Cell -> Subtree
-genSubtree group groupCell =
+genSubtree : Env -> Group -> ST.Cell -> Subtree
+genSubtree env group groupCell =
     let
         dims =
             { x = groupCell.w, y = groupCell.h }
@@ -166,7 +189,8 @@ genSubtree group groupCell =
             NE.map (genTreeCell areaScalar) group.series
 
         treemap =
-            ST.makeTreemap dims treeCells
+            sortByArea env.sortOrder treeCells
+                |> ST.makeTreemap dims
     in
     ( groupCell, treeCells, treemap )
 
@@ -219,6 +243,27 @@ getRedGreen f =
     else
         CScale.plasmaInterpolator (1 - abs f)
 
+
+------------
+-- Helpers
+
+type alias HasArea a =
+    { a | area : Float } 
+
+sortByArea : SortOrder -> NE.Nonempty (HasArea a) -> NE.Nonempty (HasArea a)
+sortByArea sortOrder xs =
+    let sort dir =
+            NE.sortBy (.area >> (*) dir) xs
+    in 
+    case sortOrder of
+        Ascending ->
+            sort 1
+
+        Descending ->
+            sort (-1)
+
+        Random ->
+            xs
 
 --------------------------------------------------------------------------------
 -- Style

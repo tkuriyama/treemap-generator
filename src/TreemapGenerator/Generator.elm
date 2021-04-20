@@ -38,8 +38,8 @@ init flags =
         env = 
             { windowW = flags.windowWidth
             , windowH = flags.windowHeight
-            , w = flags.windowWidth * 0.8
-            , h = flags.windowHeight * 0.8
+            , w = flags.windowWidth * 0.9
+            , h = flags.windowHeight * 0.9
             , groupCt = NE.length data
             , nodeCt = NE.map (NE.length) data |> NE.foldl1 (+)
             , borderWidth = 0.25
@@ -75,4 +75,13 @@ parseData data =
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-    (model, Cmd.none)
+    case msg of
+        UpdateSortOrder x ->
+            let env =
+                    model.env
+                env_ =
+                    { env | sortOrder = x }
+            in 
+            ({ model | env = env_ }, Cmd.none)
+        _ ->
+            (model, Cmd.none)
