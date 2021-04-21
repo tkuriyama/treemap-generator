@@ -13,10 +13,10 @@ An interactive generator for squarified treemaps.
 All Elm projects can be built with [`elm make`](https://elmprogramming.com/elm-make.html), such as:
 
 ```
-elm make examples/Main.elm --optimize --output=elm.js
+elm make src/Main.elm --optimize --output=elm.js
 ```
 
-... which builds the example specified in `examples/Main.elm` and compiles it to `elm.js`.
+... which builds the code specified in `src/Main.elm` and compiles it to `elm.js`.
 
 
 ### Full
