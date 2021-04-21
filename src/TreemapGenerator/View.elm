@@ -145,8 +145,8 @@ sortOrderChoice cmd title selected =
         , selected = Just selected
         , label = titleLabel <| title ++ "Sort Order"
         , options =
-            [ Input.option Ascending (E.text "Ascending")
-            , Input.option Descending (E.text "Descending")
+            [ Input.option Ascending (E.text "Ascend")
+            , Input.option Descending (E.text "Descend")
             , Input.option Random (E.text "Random")
             ]
         }
