@@ -162,10 +162,10 @@ colorScaleChoice selected =
         , selected = Just selected
         , label = titleLabel "Color Scale"
         , options =
-            [ Input.option RedGreen (E.text "Red Green")
-            , Input.option BlackWhite (E.text "Black White")
-            , Input.option TenColors (E.text "Ten Colors")
-            , Input.option TenMoreColors (E.text "Ten More Colors")
+            [ Input.option RedGreen (E.text "R & G")
+            , Input.option BlackWhite (E.text "B & W")
+            , Input.option TenColors (E.text "Ten")
+            , Input.option TenMoreColors (E.text "Ten More")
             ]
         }
 
