@@ -108,11 +108,11 @@ controls model =
                 model.env.h
             , borderSlider
                 UpdateGroupBorderWidth
-                "Group Border Size"
+                "Group Border"
                 model.env.groupBorderWidth
             , borderSlider
                 UpdateCellBorderWidth
-                "Cell Border Size"
+                "Cell Border"
                 model.env.cellBorderWidth
             ]
         ]
