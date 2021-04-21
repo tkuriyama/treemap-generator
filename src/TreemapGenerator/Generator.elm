@@ -91,6 +91,12 @@ update msg model =
             model.env
     in
     case msg of
+        UpdateWidth w ->
+            ( { model | env = { env | w = w } }, Cmd.none )
+
+        UpdateHeight h ->
+            ( { model | env = { env | h = h } }, Cmd.none )
+
         UpdateGroupSortOrder x ->
             ( { model | env = { env | groupSortOrder = x } }, Cmd.none )
 

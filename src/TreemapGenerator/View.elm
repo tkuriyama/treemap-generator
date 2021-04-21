@@ -55,8 +55,9 @@ view model =
         (E.column
             [ E.centerX
             , E.alignTop
-            , E.height <| E.px <| round model.env.windowH
             , E.width <| E.px <| round model.env.windowW
+            , E.height <|
+                (E.maximum (round model.env.windowH) E.fill)
             , E.spacing 0
             ]
             [ controls model
@@ -76,7 +77,7 @@ controls model =
     let rowAttrs =
             [ E.alignTop
             , E.centerX
-            , E.spacing 20
+            , E.spacing 30
             , E.padding 5
             ]
     in
@@ -93,16 +94,43 @@ controls model =
               ]
         , E.row
             rowAttrs
-            [ borderSlider
+            [ dimensionSlider
+                  UpdateWidth
+                  model.env.windowW
+                  "Treemap Width"
+                  model.env.w
+            , dimensionSlider
+                  UpdateHeight
+                  model.env.windowH
+                  "Treemap Height"
+                  model.env.h
+            , borderSlider
                   UpdateGroupBorderWidth
-                  "Group Border Width"
+                  "Group Border Size"
                   model.env.groupBorderWidth
             , borderSlider
                 UpdateCellBorderWidth
-                "Cell Border Width"
+                "Cell Border Size"
                 model.env.cellBorderWidth
             ]
         ]
+
+
+dimensionSlider : (Float -> Msg) -> Float -> String -> Float -> E.Element Msg
+dimensionSlider msg max_ title currentVal =
+    Input.slider
+    [ E.height <| E.px 30
+    , E.behindContent sliderElement
+    ]
+    { onChange = msg
+    , label = titleLabel title
+    , min = max_ * 0.5
+    , max = max_
+    , step = Just 10
+    , value = currentVal
+    , thumb =
+        Input.defaultThumb
+    }
 
 
 sortOrderChoice : (SortOrder -> Msg) -> String -> SortOrder -> E.Element Msg
@@ -143,16 +171,7 @@ borderSlider : (Float -> Msg) -> String -> Float -> E.Element Msg
 borderSlider msg title currentVal = 
     Input.slider
     [ E.height <| E.px 30
-    , E.behindContent
-        (E.el
-            [ E.width E.fill
-            , E.height <| E.px 10
-            , E.centerY
-            , Background.color <| E.rgb255 66 135 245-- 0.5 0.5 0.5
-            , Border.rounded 2
-            ]
-            E.none
-        )
+    , E.behindContent sliderElement
     ]
     { onChange = msg
     , label = titleLabel title
@@ -168,9 +187,21 @@ borderSlider msg title currentVal =
 titleLabel : String -> Input.Label msg
 titleLabel s =
     Input.labelAbove
-        [ Font.heavy ]
+        [ Font.heavy
+        , E.centerX
+        ]
         (E.text s)
 
+sliderElement : E.Element msg
+sliderElement =
+    E.el
+        [ E.width E.fill
+        , E.height <| E.px 10
+        , E.centerY
+        , Background.color <| E.rgb255 66 135 245
+        , Border.rounded 2
+        ]
+        E.none
 
 
 --------------------------------------------------------------------------------
