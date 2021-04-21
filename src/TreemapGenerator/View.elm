@@ -56,9 +56,9 @@ view model =
             [ E.centerX
             , E.alignTop
             , E.width <|
-                (E.maximum (round model.env.windowW) E.fill)
+                E.maximum (round model.env.windowW) E.fill
             , E.height <|
-                (E.maximum (round model.env.windowH) E.fill)
+                E.maximum (round model.env.windowH) E.fill
             , E.spacing 0
             ]
             [ controls model
@@ -75,7 +75,8 @@ view model =
 
 controls : Model -> E.Element Msg
 controls model =
-    let rowAttrs =
+    let
+        rowAttrs =
             [ E.alignTop
             , E.centerX
             , E.spacing 30
@@ -88,27 +89,27 @@ controls model =
         , E.spacing 10
         ]
         [ E.row
-              rowAttrs 
-              [ sortOrderChoice UpdateGroupSortOrder "Group " model.env.groupSortOrder
-              , sortOrderChoice UpdateCellSortOrder "Cell " model.env.groupSortOrder
-              , colorScaleChoice model.env.colorScale
-              ]
+            rowAttrs
+            [ sortOrderChoice UpdateGroupSortOrder "Group " model.env.groupSortOrder
+            , sortOrderChoice UpdateCellSortOrder "Cell " model.env.groupSortOrder
+            , colorScaleChoice model.env.colorScale
+            ]
         , E.row
             rowAttrs
             [ dimensionSlider
-                  UpdateWidth
-                  model.env.windowW
-                  "Treemap Width"
-                  model.env.w
+                UpdateWidth
+                model.env.windowW
+                "Treemap Width"
+                model.env.w
             , dimensionSlider
-                  UpdateHeight
-                  model.env.windowH
-                  "Treemap Height"
-                  model.env.h
+                UpdateHeight
+                model.env.windowH
+                "Treemap Height"
+                model.env.h
             , borderSlider
-                  UpdateGroupBorderWidth
-                  "Group Border Size"
-                  model.env.groupBorderWidth
+                UpdateGroupBorderWidth
+                "Group Border Size"
+                model.env.groupBorderWidth
             , borderSlider
                 UpdateCellBorderWidth
                 "Cell Border Size"
@@ -120,18 +121,18 @@ controls model =
 dimensionSlider : (Float -> Msg) -> Float -> String -> Float -> E.Element Msg
 dimensionSlider msg max_ title currentVal =
     Input.slider
-    [ E.height <| E.px 30
-    , E.behindContent sliderElement
-    ]
-    { onChange = msg
-    , label = titleLabel title
-    , min = max_ * 0.5
-    , max = max_
-    , step = Just 10
-    , value = currentVal
-    , thumb =
-        Input.defaultThumb
-    }
+        [ E.height <| E.px 30
+        , E.behindContent sliderElement
+        ]
+        { onChange = msg
+        , label = titleLabel title
+        , min = max_ * 0.5
+        , max = max_
+        , step = Just 10
+        , value = currentVal
+        , thumb =
+            Input.defaultThumb
+        }
 
 
 sortOrderChoice : (SortOrder -> Msg) -> String -> SortOrder -> E.Element Msg
@@ -168,21 +169,22 @@ colorScaleChoice selected =
             ]
         }
 
+
 borderSlider : (Float -> Msg) -> String -> Float -> E.Element Msg
-borderSlider msg title currentVal = 
+borderSlider msg title currentVal =
     Input.slider
-    [ E.height <| E.px 30
-    , E.behindContent sliderElement
-    ]
-    { onChange = msg
-    , label = titleLabel title
-    , min = 0
-    , max = 4
-    , step = Just 0.25
-    , value = currentVal
-    , thumb =
-        Input.defaultThumb
-    }
+        [ E.height <| E.px 30
+        , E.behindContent sliderElement
+        ]
+        { onChange = msg
+        , label = titleLabel title
+        , min = 0
+        , max = 4
+        , step = Just 0.25
+        , value = currentVal
+        , thumb =
+            Input.defaultThumb
+        }
 
 
 titleLabel : String -> Input.Label msg
@@ -192,6 +194,7 @@ titleLabel s =
         , E.centerX
         ]
         (E.text s)
+
 
 sliderElement : E.Element msg
 sliderElement =
@@ -203,6 +206,7 @@ sliderElement =
         , Border.rounded 2
         ]
         E.none
+
 
 
 --------------------------------------------------------------------------------
@@ -452,4 +456,3 @@ sortByArea sortOrder xs =
 
         Random ->
             xs
-

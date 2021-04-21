@@ -113,7 +113,7 @@ update msg model =
         UpdateCellBorderWidth w ->
             ( { model | env = { env | cellBorderWidth = w } }, Cmd.none )
 
-        WindowResize (w, h) ->
+        WindowResize ( w, h ) ->
             ( { model | env = { env | w = toFloat w, h = toFloat h } }
             , Cmd.none
             )
@@ -121,10 +121,13 @@ update msg model =
         _ ->
             ( model, Cmd.none )
 
+
+
 --------------------------------------------------------------------------------
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ onResize (\w h -> WindowResize (w, h))
+        [ onResize (\w h -> WindowResize ( w, h ))
         ]
