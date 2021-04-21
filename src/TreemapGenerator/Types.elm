@@ -70,6 +70,7 @@ type Msg
     | UpdateColorScale ColorScale
     | UpdateGroupSortOrder SortOrder
     | UpdateCellSortOrder SortOrder
+    | WindowResize (Int, Int)
 
 
 

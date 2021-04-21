@@ -55,7 +55,8 @@ view model =
         (E.column
             [ E.centerX
             , E.alignTop
-            , E.width <| E.px <| round model.env.windowW
+            , E.width <|
+                (E.maximum (round model.env.windowW) E.fill)
             , E.height <|
                 (E.maximum (round model.env.windowH) E.fill)
             , E.spacing 0

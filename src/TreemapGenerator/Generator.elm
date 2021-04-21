@@ -4,6 +4,7 @@ module TreemapGenerator.Generator exposing (main)
 -}
 
 import Browser
+import Browser.Events exposing (onResize)
 import List.Nonempty as NE
 import TreemapGenerator.SampleData as SampleData
 import TreemapGenerator.Types exposing (..)
@@ -112,5 +113,18 @@ update msg model =
         UpdateCellBorderWidth w ->
             ( { model | env = { env | cellBorderWidth = w } }, Cmd.none )
 
+        WindowResize (w, h) ->
+            ( { model | env = { env | w = toFloat w, h = toFloat h } }
+            , Cmd.none
+            )
+
         _ ->
             ( model, Cmd.none )
+
+--------------------------------------------------------------------------------
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ onResize (\w h -> WindowResize (w, h))
+        ]
