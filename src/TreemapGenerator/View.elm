@@ -49,7 +49,7 @@ view : Model -> Html Msg
 view model =
     E.layout
         [ Font.family [ Font.typeface "Consolas", Font.sansSerif ]
-        , Font.size 24
+        , Font.size 18
         , E.padding 10
         ]
         (E.column
