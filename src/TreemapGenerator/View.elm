@@ -110,12 +110,12 @@ controls model =
             , countSlider
                 UpdateGroupCt
                 "Group Count"
-                (1, 20, 1)
+                ( 1, 20, 1 )
                 model.env.groupCt
             , countSlider
                 UpdateCellCt
                 "Cell Count"
-                (100, 4000, 100)
+                ( 100, 4000, 100 )
                 model.env.cellCt
             , borderSlider
                 UpdateGroupBorderWidth
@@ -129,8 +129,8 @@ controls model =
         ]
 
 
-countSlider : (Int -> Msg) -> String -> (Int, Int, Int) -> Int -> E.Element Msg
-countSlider  msg title (minCt, maxCt, inc) currentVal =
+countSlider : (Int -> Msg) -> String -> ( Int, Int, Int ) -> Int -> E.Element Msg
+countSlider msg title ( minCt, maxCt, inc ) currentVal =
     Input.slider
         [ E.height <| E.px 30
         , E.behindContent sliderElement

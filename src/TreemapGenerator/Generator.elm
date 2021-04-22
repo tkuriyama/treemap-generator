@@ -101,15 +101,15 @@ update msg model =
 
         UpdateGroupCt n ->
             ( { model | env = { env | groupCt = n } }
-              , Random.generate Regroup (regroup n model.data)
-              )
+            , Random.generate Regroup (regroup n model.data)
+            )
 
         UpdateCellCt n ->
             ( { model | env = { env | cellCt = n } }
-              , Random.generate
-                  UpdateCells
-                  (updateCells model.data model.env.cellCt n)
-              )
+            , Random.generate
+                UpdateCells
+                (updateCells model.data model.env.cellCt n)
+            )
 
         UpdateGroupSortOrder x ->
             ( { model | env = { env | groupSortOrder = x } }, Cmd.none )
@@ -144,44 +144,48 @@ regroup n groups =
 
 
 regroupList : Int -> List Pair -> Random.Generator Data
-regroupList n pairs = 
+regroupList n pairs =
     let
         f i generatorAcc =
             generatorAcc |> Random.andThen (takeRandom i)
     in
-        List.range 1 n
-            |> List.foldr f (Random.constant ([], pairs))
-            |> Random.map (Tuple.first >> parseData)
+    List.range 1 n
+        |> List.foldr f (Random.constant ( [], pairs ))
+        |> Random.map (Tuple.first >> parseData)
 
 
 takeRandom :
     Int
-    -> (List (List a), List a)
-    -> Random.Generator (List (List a), List a)
-takeRandom n (acc, elems) =
+    -> ( List (List a), List a )
+    -> Random.Generator ( List (List a), List a )
+takeRandom n ( acc, elems ) =
     if n == 1 then
-        Random.constant (elems :: acc, [])
+        Random.constant ( elems :: acc, [] )
+
     else
-        List.length elems - n
+        List.length elems
+            - n
             |> (\x -> round (toFloat x * 0.8))
             |> Random.int 1
             |> Random.andThen
-               (\ct -> RL.choices ct elems)
+                (\ct -> RL.choices ct elems)
             |> Random.andThen
-               (\(xs, ys) -> Random.constant (xs :: acc, ys))
+                (\( xs, ys ) -> Random.constant ( xs :: acc, ys ))
 
 
 updateCells : Data -> Int -> Int -> Random.Generator Data
 updateCells groups current target =
     if current == target then
         Random.constant groups
+
     else
         let
-            (f, diff) =
+            ( f, diff ) =
                 if current > target then
-                    (removeCells, current - target)
+                    ( removeCells, current - target )
+
                 else
-                    (addCells, target - current)
+                    ( addCells, target - current )
         in
         f (NE.concat groups |> NE.toList) diff
             |> Random.andThen (regroupList (NE.length groups))
@@ -190,13 +194,15 @@ updateCells groups current target =
 removeCells : List Pair -> Int -> Random.Generator (List Pair)
 removeCells pairs n =
     RL.choices n pairs
-        |> Random.andThen (\(xs, ys) -> Random.constant ys)
+        |> Random.andThen (\( xs, ys ) -> Random.constant ys)
 
 
 addCells : List Pair -> Int -> Random.Generator (List Pair)
 addCells pairs n =
     RL.choices n pairs
-        |> Random.andThen (\(xs, ys) -> Random.constant (xs ++ pairs))
+        |> Random.andThen (\( xs, ys ) -> Random.constant (xs ++ pairs))
+
+
 
 --------------------------------------------------------------------------------
 

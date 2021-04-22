@@ -51,6 +51,7 @@ padCenter : Int -> String -> String
 padCenter n s =
     if n <= String.length s then
         s
+
     else
         let
             padCt =
@@ -59,4 +60,4 @@ padCenter n s =
             pad =
                 String.repeat padCt nbsp
         in
-            pad ++ s ++ pad
+        pad ++ s ++ pad
