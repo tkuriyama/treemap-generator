@@ -17,6 +17,7 @@ import Scale.Color as CScale
 import String.Format
 import TreemapGenerator.SquarifiedTreemap as ST
 import TreemapGenerator.Types exposing (..)
+import TreemapGenerator.Utils as Utils
 import TypedSvg exposing (g, rect, style, svg, text_)
 import TypedSvg.Attributes
     exposing
@@ -99,13 +100,23 @@ controls model =
             [ dimensionSlider
                 UpdateWidth
                 model.env.windowW
-                "Treemap Width"
+                (Utils.padCenter 10 "Width")
                 model.env.w
             , dimensionSlider
                 UpdateHeight
                 model.env.windowH
-                "Treemap Height"
+                (Utils.padCenter 10 "Height")
                 model.env.h
+            , countSlider
+                UpdateGroupCt
+                "Group Count"
+                (1, 20, 1)
+                model.env.groupCt
+            , countSlider
+                UpdateCellCt
+                "Cell Count"
+                (100, 4000, 100)
+                model.env.cellCt
             , borderSlider
                 UpdateGroupBorderWidth
                 "Group Border"
@@ -116,6 +127,23 @@ controls model =
                 model.env.cellBorderWidth
             ]
         ]
+
+
+countSlider : (Int -> Msg) -> String -> (Int, Int, Int) -> Int -> E.Element Msg
+countSlider  msg title (minCt, maxCt, inc) currentVal =
+    Input.slider
+        [ E.height <| E.px 30
+        , E.behindContent sliderElement
+        ]
+        { onChange = round >> msg
+        , label = titleLabel title
+        , min = toFloat minCt
+        , max = toFloat maxCt
+        , step = Just (toFloat inc)
+        , value = toFloat currentVal
+        , thumb =
+            Input.defaultThumb
+        }
 
 
 dimensionSlider : (Float -> Msg) -> Float -> String -> Float -> E.Element Msg

@@ -45,3 +45,18 @@ mean xs =
 nbsp : String
 nbsp =
     String.fromChar (Char.fromCode 160)
+
+
+padCenter : Int -> String -> String
+padCenter n s =
+    if n <= String.length s then
+        s
+    else
+        let
+            padCt =
+                round ((toFloat <| String.length s) / 2)
+
+            pad =
+                String.repeat padCt nbsp
+        in
+            pad ++ s ++ pad

@@ -6,6 +6,8 @@ module TreemapGenerator.Generator exposing (main)
 import Browser
 import Browser.Events exposing (onResize)
 import List.Nonempty as NE
+import Random
+import Random.List as RL
 import TreemapGenerator.SampleData as SampleData
 import TreemapGenerator.Types exposing (..)
 import TreemapGenerator.View as View
@@ -43,8 +45,7 @@ init flags =
             , w = flags.windowWidth * 0.9
             , h = flags.windowHeight * 0.9
             , groupCt = NE.length data
-            , nodeCt = NE.map NE.length data |> NE.foldl1 (+)
-            , noise = 0.0
+            , cellCt = NE.map NE.length data |> NE.foldl1 (+)
             , groupBorderWidth = 0.25
             , cellBorderWidth = 0.25
             , colorScale = RedGreen
@@ -98,6 +99,18 @@ update msg model =
         UpdateHeight h ->
             ( { model | env = { env | h = h } }, Cmd.none )
 
+        UpdateGroupCt n ->
+            ( { model | env = { env | groupCt = n } }
+              , Random.generate Regroup (regroup n model.data)
+              )
+
+        UpdateCellCt n ->
+            ( { model | env = { env | cellCt = n } }
+              , Random.generate
+                  UpdateCells
+                  (updateCells model.data model.env.cellCt n)
+              )
+
         UpdateGroupSortOrder x ->
             ( { model | env = { env | groupSortOrder = x } }, Cmd.none )
 
@@ -118,10 +131,72 @@ update msg model =
             , Cmd.none
             )
 
-        _ ->
-            ( model, Cmd.none )
+        Regroup data ->
+            ( { model | data = data }, Cmd.none )
+
+        UpdateCells data ->
+            ( { model | data = data }, Cmd.none )
 
 
+regroup : Int -> Data -> Random.Generator Data
+regroup n groups =
+    NE.concat groups |> NE.toList |> regroupList n
+
+
+regroupList : Int -> List Pair -> Random.Generator Data
+regroupList n pairs = 
+    let
+        f i generatorAcc =
+            generatorAcc |> Random.andThen (takeRandom i)
+    in
+        List.range 1 n
+            |> List.foldr f (Random.constant ([], pairs))
+            |> Random.map (Tuple.first >> parseData)
+
+
+takeRandom :
+    Int
+    -> (List (List a), List a)
+    -> Random.Generator (List (List a), List a)
+takeRandom n (acc, elems) =
+    if n == 1 then
+        Random.constant (elems :: acc, [])
+    else
+        List.length elems - n
+            |> (\x -> round (toFloat x * 0.8))
+            |> Random.int 1
+            |> Random.andThen
+               (\ct -> RL.choices ct elems)
+            |> Random.andThen
+               (\(xs, ys) -> Random.constant (xs :: acc, ys))
+
+
+updateCells : Data -> Int -> Int -> Random.Generator Data
+updateCells groups current target =
+    if current == target then
+        Random.constant groups
+    else
+        let
+            (f, diff) =
+                if current > target then
+                    (removeCells, current - target)
+                else
+                    (addCells, target - current)
+        in
+        f (NE.concat groups |> NE.toList) diff
+            |> Random.andThen (regroupList (NE.length groups))
+
+
+removeCells : List Pair -> Int -> Random.Generator (List Pair)
+removeCells pairs n =
+    RL.choices n pairs
+        |> Random.andThen (\(xs, ys) -> Random.constant ys)
+
+
+addCells : List Pair -> Int -> Random.Generator (List Pair)
+addCells pairs n =
+    RL.choices n pairs
+        |> Random.andThen (\(xs, ys) -> Random.constant (xs ++ pairs))
 
 --------------------------------------------------------------------------------
 
