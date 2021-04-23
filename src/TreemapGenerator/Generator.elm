@@ -163,14 +163,19 @@ takeRandom n ( acc, elems ) =
         Random.constant ( elems :: acc, [] )
 
     else
-        List.length elems
-            - n
-            |> (\x -> round (toFloat x * 0.8))
-            |> Random.int 1
+        Random.int 1 (maxElems elems n)
             |> Random.andThen
                 (\ct -> RL.choices ct elems)
             |> Random.andThen
                 (\( xs, ys ) -> Random.constant ( xs :: acc, ys ))
+
+
+maxElems : List a -> Int -> Int
+maxElems elems n =
+    (List.length elems - n)
+        |> toFloat
+        |> (*) 0.8
+        |> round
 
 
 updateCells : Data -> Int -> Int -> Random.Generator Data
