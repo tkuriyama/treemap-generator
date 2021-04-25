@@ -115,7 +115,7 @@ update msg model =
             ( { model | env = { env | groupSortOrder = x } }, Cmd.none )
 
         UpdateCellSortOrder x ->
-            ( { model | env = { env | groupSortOrder = x } }, Cmd.none )
+            ( { model | env = { env | cellSortOrder = x } }, Cmd.none )
 
         UpdateColorScale c ->
             ( { model | env = { env | colorScale = c } }, Cmd.none )
@@ -136,6 +136,10 @@ update msg model =
 
         UpdateCells data ->
             ( { model | data = data }, Cmd.none )
+
+
+
+-- Update Groups nad Cells
 
 
 regroup : Int -> Data -> Random.Generator Data
