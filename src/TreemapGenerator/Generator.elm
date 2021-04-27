@@ -128,16 +128,18 @@ update msg model =
 
         WindowResize ( w, h ) ->
             let
-                (w_, h_) =
-                    (toFloat w, toFloat h)
-            in 
-            ( { model | env = { env
-                                  | windowW = w_
-                                  , windowH = h_
-                                  , w = env.w * w_ / env.windowW
-                                  , h = env.h * h_ / env.windowH
-                              }
-              } 
+                ( w_, h_ ) =
+                    ( toFloat w, toFloat h )
+            in
+            ( { model
+                | env =
+                    { env
+                        | windowW = w_
+                        , windowH = h_
+                        , w = env.w * w_ / env.windowW
+                        , h = env.h * h_ / env.windowH
+                    }
+              }
             , Cmd.none
             )
 
