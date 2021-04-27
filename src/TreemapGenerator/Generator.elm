@@ -24,7 +24,7 @@ main =
         { init = init
         , view = View.view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
 
 
@@ -43,7 +43,7 @@ init flags =
             { windowW = flags.windowWidth
             , windowH = flags.windowHeight
             , w = flags.windowWidth * 0.9
-            , h = flags.windowHeight * 0.9
+            , h = flags.windowHeight * 0.7
             , groupCt = NE.length data
             , cellCt = NE.map NE.length data |> NE.foldl1 (+)
             , groupBorderWidth = 0.25
@@ -127,7 +127,17 @@ update msg model =
             ( { model | env = { env | cellBorderWidth = w } }, Cmd.none )
 
         WindowResize ( w, h ) ->
-            ( { model | env = { env | w = toFloat w, h = toFloat h } }
+            let
+                (w_, h_) =
+                    (toFloat w, toFloat h)
+            in 
+            ( { model | env = { env
+                                  | windowW = w_
+                                  , windowH = h_
+                                  , w = env.w * w_ / env.windowW
+                                  , h = env.h * h_ / env.windowH
+                              }
+              } 
             , Cmd.none
             )
 

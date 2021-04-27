@@ -104,7 +104,7 @@ controls model =
                 model.env.w
             , dimensionSlider
                 UpdateHeight
-                model.env.windowH
+                (model.env.windowH * 0.85)
                 (Utils.padCenter 10 "Height")
                 model.env.h
             , countSlider
