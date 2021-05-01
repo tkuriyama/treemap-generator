@@ -2,6 +2,9 @@
 
 An interactive generator for squarified treemaps.
 
+The algorithm for squarification comes from [this paper](https://www.win.tue.nl/~vanwijk/stm.pdf), with brief write-up of the Elm implementation [here](https://tkuriyama.github.io/papers/2021/04/15/Squarified-Treemaps.html).
+
+
 ## Live Version
 
 [https://tarokuriyama.com/treemap](https://tarokuriyama.com/treemap)
